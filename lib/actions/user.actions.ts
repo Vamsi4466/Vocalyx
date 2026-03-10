@@ -3,10 +3,10 @@
 import { createAdminClient, createSessionClient } from "@/lib/appwrite";
 import { appwriteConfig } from "@/lib/appwrite/config";
 import { Query, ID } from "node-appwrite";
-import { parseStringify } from "@/lib/utils";
 import { cookies } from "next/headers";
 // import { avatarPlaceholderUrl } from "@/constants";
 import { redirect } from "next/navigation";
+import { parseStringify } from "../utils";
 
 if (!appwriteConfig.databaseId || !appwriteConfig.usersCollectionId) {
   throw new Error("Missing Appwrite configuration values");
@@ -58,7 +58,7 @@ export const createAccount = async ({
 
   if (!existingUser) {
     const { databases } = await createAdminClient();
-    const filesCount = 0;
+    const booksCount = 0;
     const storageUsed = 0;
 
     await databases.createDocument(
@@ -66,12 +66,11 @@ export const createAccount = async ({
       usersCollId,     // …and here
       ID.unique(),
       {
-        name:fullName,
+        fullName,
         email,
         accountId,
         // joinedAt: new Date().toISOString(),
-        // booksCount,
-        // storageUsed,
+        booksCount,
       },
     );
   }
@@ -90,13 +89,16 @@ export const verifySecret = async ({
     const { account } = await createAdminClient();
 
     const session = await account.createSession(accountId, password);
+    console.log("SESSION OBJECT:", session);
+    console.log("SESSION SECRET:", session.secret);
 
     (await cookies()).set("appwrite-session", session.secret, {
       path: "/",
       httpOnly: true,
       sameSite: "strict",
-      secure: true,
+      secure: false,
     });
+    // redirect("/");
 
     return parseStringify({ sessionId: session.$id });
   } catch (error) {
@@ -115,7 +117,7 @@ export const getCurrentUser = async () => {
       usersCollId,
       [Query.equal("accountId", result.$id)],
     );
-
+    
     if (user.total <= 0) return null;
 
     return parseStringify(user.documents[0]);

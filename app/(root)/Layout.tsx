@@ -1,17 +1,28 @@
-import { getCurrentUser } from '@/lib/actions/user.actions';
-import { redirect } from 'next/navigation';
-import React from 'react'
+import Navbar from "@/components/Navbar";
+import { getCurrentUser } from "@/lib/actions/user.actions";
+import { redirect } from "next/navigation";
+import React from "react";
+import { Toaster } from "sonner";
 
 export const dynamic = "force-dynamic";
 
 const Layout = async ({ children }: { children: React.ReactNode }) => {
   const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    console.log(currentUser);
+    return redirect("/sign-in");
   
-      if (!currentUser) return redirect("/sign-in");
-      console.log(currentUser.status);
+  }
+
   return (
-    <div>Layout {children}</div>
-  )
-}
+    <div>
+      <h1>Hello</h1>
+      <Navbar />
+      {children}
+      <Toaster />
+    </div>
+  );
+};
 
 export default Layout;
