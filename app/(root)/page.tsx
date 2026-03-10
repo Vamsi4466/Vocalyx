@@ -8,9 +8,15 @@ import { Search } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import React from 'react'
 
+export const dynamic = "force-dynamic";
+
 const page = async ({ searchParams }: { searchParams: Promise<{ query?: string }> }) => {
   
   const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/sign-in");
+  }
 
   const books = await getUserBooks(user.$id);
 
