@@ -23,8 +23,10 @@ const page = async ({ searchParams }: { searchParams: Promise<{ query?: string }
   const { query } = await searchParams;
 
   return (
-    <main className='wrapper container'>
-      
+    <div>
+      <Navbar />
+      <main className='wrapper container'>
+    
       <HeroSection />
 
       <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-10'>
@@ -39,6 +41,7 @@ const page = async ({ searchParams }: { searchParams: Promise<{ query?: string }
         ))}
       </div>
     </main>
+    </div>
   )
 }
 
