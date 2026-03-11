@@ -18,9 +18,8 @@ import {
 import React, { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-
+import { verifySecret, sendEmailOTP } from "@/lib/actions/user.actions";
 import { useRouter } from "next/navigation";
-import { sendEmailOTP, verifySecret } from "@/lib/actions/user.actions";
 
 const OtpModal = ({
   accountId,
@@ -38,13 +37,8 @@ const OtpModal = ({
     e.preventDefault();
     setIsLoading(true);
 
-    console.log({ accountId, password });
-
     try {
       const sessionId = await verifySecret({ accountId, password });
-
-      console.log({ sessionId });
-
       if (sessionId) router.push("/");
     } catch (error) {
       console.log("Failed to verify OTP", error);
@@ -59,41 +53,42 @@ const OtpModal = ({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-      <AlertDialogContent className="shad-alert-dialog">
-        <AlertDialogHeader className="relative flex justify-center">
-          <AlertDialogTitle className="h2 text-center">
+      <AlertDialogContent className="space-y-6 max-w-[95%] sm:w-[400px] md:w-[480px] rounded-2xl bg-white px-6 md:px-10 py-10 shadow-lg outline-none">
+        <AlertDialogHeader className="relative flex flex-col items-center">
+          <AlertDialogTitle className="text-2xl md:text-[28px] font-bold text-center text-[#4b2e1f] mb-2">
             Enter Your OTP
-            <Image
-              src="/assets/icons/close-dark.svg"
-              alt="close"
-              width={20}
-              height={20}
-              onClick={() => setIsOpen(false)}
-              className="otp-close-button"
-            />
           </AlertDialogTitle>
-          <AlertDialogDescription className="subtitle-2 text-center text-light-100">
-            We&apos;ve sent a code to{" "}
-            <span className="pl-1 text-brand">{email}</span>
+          <Image
+            src="/assets/icons/close-dark.svg"
+            alt="close"
+            width={20}
+            height={20}
+            onClick={() => setIsOpen(false)}
+            className="absolute top-4 right-4 cursor-pointer"
+          />
+          <AlertDialogDescription className="text-sm md:text-[15px] font-medium text-center text-[#7c6a5e]">
+            We've sent a code to{" "}
+            <span className="font-semibold text-[#4b2e1f]">{email}</span>
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         <InputOTP maxLength={6} value={password} onChange={setPassword}>
-          <InputOTPGroup className="shad-otp">
-            <InputOTPSlot index={0} className="shad-otp-slot" />
-            <InputOTPSlot index={1} className="shad-otp-slot" />
-            <InputOTPSlot index={2} className="shad-otp-slot" />
-            <InputOTPSlot index={3} className="shad-otp-slot" />
-            <InputOTPSlot index={4} className="shad-otp-slot" />
-            <InputOTPSlot index={5} className="shad-otp-slot" />
+          <InputOTPGroup className="w-full flex gap-2 justify-between mt-4">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <InputOTPSlot
+                key={i}
+                index={i}
+                className="text-2xl md:text-[32px] font-medium text-center rounded-xl border border-[#d2c0a8] shadow-sm focus:border-[#4b2e1f] focus:ring-1 focus:ring-[#4b2e1f] transition-all w-12 md:w-14 h-14 md:h-16"
+              />
+            ))}
           </InputOTPGroup>
         </InputOTP>
 
         <AlertDialogFooter>
-          <div className="flex w-full flex-col gap-4">
+          <div className="flex w-full flex-col gap-4 mt-6">
             <AlertDialogAction
               onClick={handleSubmit}
-              className="shad-submit-btn h-12"
+              className="bg-[#4b2e1f] hover:bg-[#5c3b2a] text-white text-sm md:text-[15px] font-medium rounded-full h-12 flex items-center justify-center transition-all"
               type="button"
             >
               Submit
@@ -108,12 +103,12 @@ const OtpModal = ({
               )}
             </AlertDialogAction>
 
-            <div className="subtitle-2 mt-2 text-center text-light-100">
-              Didn&apos;t get a code?
+            <div className="text-sm md:text-[15px] font-medium text-center text-[#7c6a5e]">
+              Didn't get a code?
               <Button
                 type="button"
                 variant="link"
-                className="pl-1 text-brand"
+                className="pl-1 text-[#4b2e1f] underline"
                 onClick={handleResendOtp}
               >
                 Click to resend

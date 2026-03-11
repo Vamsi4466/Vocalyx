@@ -17,7 +17,6 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div>
-      <h1>Hello</h1>
       <Navbar />
       {children}
       <Toaster />
