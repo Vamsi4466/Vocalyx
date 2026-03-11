@@ -6,7 +6,7 @@ import { InputFile } from "node-appwrite/file";
 import { createAdminClient, createSessionClient } from "../appwrite";
 import { appwriteConfig } from "../appwrite/config";
 import { constructFileUrl, convertFileSize, serializeData } from "../utils";
-import { ID, Query } from "node-appwrite";
+import { ID, Models, Query } from "node-appwrite";
 
 /* ---------------- Check if Book Exists ---------------- */
 
@@ -39,6 +39,7 @@ export const checkBookExists = async (userId: string, title: string) => {
 import { PDFDocument } from "pdf-lib"; // Make sure pdf-lib is installed
 import slugify from "slugify";
 import { revalidatePath } from "next/cache";
+import { getCurrentUser } from "./user.actions";
 
 export const createBook = async ({
   userId,
@@ -241,4 +242,33 @@ export const deleteBookWithRelations = async ({ bookId, path }: { bookId: string
   await databases.deleteDocument(appwriteConfig.databaseId, appwriteConfig.booksCollectionId, bookId);
 
   revalidatePath(path);
+};
+
+interface GetBooksProps {
+  title: string;
+}
+
+export const getBooks = async ({ title }: GetBooksProps) => {
+  try {
+    const { databases } = await createSessionClient();
+    const currentUser = await getCurrentUser();
+    if (!currentUser) throw new Error("User not found");
+
+    const queries = [
+      // Query.equal("$id", currentUser.$id),   // Only books of current user
+      Query.search("title", title),              // Full-text search on title
+      Query.orderDesc("$updatedAt"),             // Most recent first
+    ];
+
+    const books: Models.DocumentList = await databases.listDocuments(
+      appwriteConfig.databaseId!,
+      appwriteConfig.booksCollectionId!,
+      queries
+    );
+
+    return JSON.parse(JSON.stringify(books.documents));
+  } catch (error) {
+    console.error("Failed to fetch books:", error);
+    return [];
+  }
 };

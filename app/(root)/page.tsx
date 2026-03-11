@@ -1,10 +1,11 @@
 import BookCard from '@/components/BookCard';
 import HeroSection from '@/components/HeroSection';
 import Navbar from '@/components/Navbar';
+import Search from '@/components/Search';
 import { getUserBooks } from '@/lib/actions/book.actions';
 import { getCurrentUser } from '@/lib/actions/user.actions';
 import { sampleBooks } from '@/lib/constants';
-import { Search } from 'lucide-react';
+// import { Search } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import React from 'react'
 
