@@ -5,7 +5,7 @@ import { InputFile } from "node-appwrite/file";
 
 import { createAdminClient, createSessionClient } from "../appwrite";
 import { appwriteConfig } from "../appwrite/config";
-import { constructFileUrl, serializeData } from "../utils";
+import { constructFileUrl, convertFileSize, serializeData } from "../utils";
 import { ID, Query } from "node-appwrite";
 
 /* ---------------- Check if Book Exists ---------------- */
@@ -36,6 +36,8 @@ export const checkBookExists = async (userId: string, title: string) => {
 // import { createAdminClient } from "@/lib/appwrite-server";
 // import { appwriteConfig } from "@/lib/appwrite-config";
 
+import { PDFDocument } from "pdf-lib"; // Make sure pdf-lib is installed
+
 export const createBook = async ({
   userId,
   title,
@@ -45,65 +47,44 @@ export const createBook = async ({
   pdfFile,
   coverImage,
   segments,
-  parsedCover
+  parsedCover,
 }: any) => {
-
   const { storage, databases } = await createAdminClient();
 
   /* ---------- Prepare PDF ---------- */
-
   const pdfBuffer = Buffer.from(await pdfFile.arrayBuffer());
   const pdfInputFile = InputFile.fromBuffer(pdfBuffer, pdfFile.name);
 
   /* ---------- Prepare Cover ---------- */
-
   let coverInputFile;
 
   if (coverImage) {
-
     const coverBuffer = Buffer.from(await coverImage.arrayBuffer());
     coverInputFile = InputFile.fromBuffer(coverBuffer, coverImage.name);
-
   } else if (parsedCover) {
-
     const response = await fetch(parsedCover);
     const buffer = Buffer.from(await response.arrayBuffer());
-
-    coverInputFile = InputFile.fromBuffer(
-      buffer,
-      `${slug}_cover.png`
-    );
-
+    coverInputFile = InputFile.fromBuffer(buffer, `${slug}_cover.png`);
   }
 
   /* ---------- Upload Files in Parallel ---------- */
-
   const [pdfUpload, coverUpload] = await Promise.all([
-
-    storage.createFile(
-      appwriteConfig.bucketId,
-      ID.unique(),
-      pdfInputFile
-    ),
-
+    storage.createFile(appwriteConfig.bucketId, ID.unique(), pdfInputFile),
     coverInputFile
-      ? storage.createFile(
-          appwriteConfig.bucketId,
-          ID.unique(),
-          coverInputFile
-        )
-      : null
-
+      ? storage.createFile(appwriteConfig.bucketId, ID.unique(), coverInputFile)
+      : null,
   ]);
 
   const pdfUrl = constructFileUrl(pdfUpload.$id);
+  const coverUrl = coverUpload ? constructFileUrl(coverUpload.$id) : "";
 
-  const coverUrl = coverUpload
-    ? constructFileUrl(coverUpload.$id)
-    : "";
+  /* ---------- Compute extra info ---------- */
+  const totalWords = segments.reduce((acc: number, segment: any) => acc + (segment.wordCount || 0), 0);
+  const totalPages = segments.reduce((max: number, segment: any) => Math.max(max, segment.pageNumber ?? 0), 0);
+  const fileSize = pdfUpload.sizeOriginal; // numeric bytes
+  const readableSize = convertFileSize(fileSize); // optional string for UI
 
   /* ---------- Create Book ---------- */
-
   const book = await databases.createDocument(
     appwriteConfig.databaseId,
     appwriteConfig.booksCollectionId,
@@ -115,18 +96,18 @@ export const createBook = async ({
       author,
       persona,
       fileURL: pdfUrl,
-      coverURL: coverUrl
+      coverURL: coverUrl,
+      totalWords,
+      pages:totalPages,
+      fileSize,     // numeric bytes ✅
+      readableSize, // optional string
     }
   );
 
   /* ---------- Save Segments Efficiently ---------- */
-
   const batchSize = 25;
-
   for (let i = 0; i < segments.length; i += batchSize) {
-
     const batch = segments.slice(i, i + batchSize);
-
     await Promise.all(
       batch.map((segment: any) =>
         databases.createDocument(
@@ -139,12 +120,11 @@ export const createBook = async ({
             segmentIndex: segment.segmentIndex,
             text: segment.text,
             wordCount: segment.wordCount,
-            pageNumber: segment.pageNumber ?? null
+            pageNumber: segment.pageNumber ?? null,
           }
         )
       )
     );
-
   }
 
   return JSON.parse(JSON.stringify(book));
