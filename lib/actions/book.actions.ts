@@ -37,6 +37,8 @@ export const checkBookExists = async (userId: string, title: string) => {
 // import { appwriteConfig } from "@/lib/appwrite-config";
 
 import { PDFDocument } from "pdf-lib"; // Make sure pdf-lib is installed
+import slugify from "slugify";
+import { revalidatePath } from "next/cache";
 
 export const createBook = async ({
   userId,
@@ -213,4 +215,30 @@ export const getBookBySlug = async (slug: string, userId: string) => {
     console.error("Error fetching book by slug", e);
     return { success: false, error: e instanceof Error ? e.message : e };
   }
+};
+
+export const renameBook = async ({ bookId, newTitle, path }: { bookId: string; newTitle: string; path: string }) => {
+  const { databases } = await createAdminClient();
+  await databases.updateDocument(appwriteConfig.databaseId, appwriteConfig.booksCollectionId, bookId, {
+    title: newTitle,
+    slug: slugify(newTitle),
+  });
+  revalidatePath(path);
+};
+
+export const deleteBookWithRelations = async ({ bookId, path }: { bookId: string; path: string }) => {
+  const { databases } = await createAdminClient();
+
+  // Delete all segments
+  const segments = await databases.listDocuments(appwriteConfig.databaseId, appwriteConfig.segmentsCollectionId, [Query.equal("bookId", bookId)]);
+  await Promise.all(segments.documents.map(seg => databases.deleteDocument(appwriteConfig.databaseId, appwriteConfig.segmentsCollectionId, seg.$id)));
+
+  // Delete all sessions
+  const sessions = await databases.listDocuments(appwriteConfig.databaseId, appwriteConfig.sessionsCollectionId, [Query.equal("bookId", bookId)]);
+  await Promise.all(sessions.documents.map(sess => databases.deleteDocument(appwriteConfig.databaseId, appwriteConfig.sessionsCollectionId, sess.$id)));
+
+  // Delete the book itself
+  await databases.deleteDocument(appwriteConfig.databaseId, appwriteConfig.booksCollectionId, bookId);
+
+  revalidatePath(path);
 };
