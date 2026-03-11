@@ -2,7 +2,7 @@
 
 import { getCurrentUser, signOutUser } from '@/lib/actions/user.actions';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Image from "next/image";
 import React, { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils';
@@ -15,6 +15,22 @@ const navItems = [
 
 const Navbar = () => {
     const pathName = usePathname();
+    const [currentUser, setCurrentUser] = useState<any>(null);
+    const router = useRouter();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const user = await getCurrentUser();
+      if (!user) {
+        router.push("/sign-in");
+      } else {
+        setCurrentUser(user);
+      }
+    };
+    fetchUser();
+  }, [router]);
+
+  if (!currentUser) return null;
 
     return (
         <header className='w-full fixed z-50 bg-[var(--bg-primary)]'>
