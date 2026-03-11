@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Toaster } from "sonner";
 
+export const dynamic = "force-dynamic";
+
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const router = useRouter();
