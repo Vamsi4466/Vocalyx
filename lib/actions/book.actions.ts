@@ -1,11 +1,12 @@
 'use server';
 
-import { ID, Query } from "appwrite";
+// import { ID, Query } from "appwrite";
 import { InputFile } from "node-appwrite/file";
 
 import { createAdminClient, createSessionClient } from "../appwrite";
 import { appwriteConfig } from "../appwrite/config";
 import { constructFileUrl, serializeData } from "../utils";
+import { ID, Query } from "node-appwrite";
 
 /* ---------------- Check if Book Exists ---------------- */
 
@@ -29,6 +30,12 @@ export const checkBookExists = async (userId: string, title: string) => {
 
 /* ---------------- Create Book ---------------- */
 
+// 'use server';
+
+// import { ID, InputFile } from "node-appwrite";
+// import { createAdminClient } from "@/lib/appwrite-server";
+// import { appwriteConfig } from "@/lib/appwrite-config";
+
 export const createBook = async ({
   userId,
   title,
@@ -38,78 +45,64 @@ export const createBook = async ({
   pdfFile,
   coverImage,
   segments,
-  parsedCover // pass parsedPDF.cover from client
+  parsedCover
 }: any) => {
 
   const { storage, databases } = await createAdminClient();
 
-  /* ---------- Upload PDF ---------- */
+  /* ---------- Prepare PDF ---------- */
 
   const pdfBuffer = Buffer.from(await pdfFile.arrayBuffer());
+  const pdfInputFile = InputFile.fromBuffer(pdfBuffer, pdfFile.name);
 
-  const pdfInputFile = InputFile.fromBuffer(
-    pdfBuffer,
-    pdfFile.name
-  );
+  /* ---------- Prepare Cover ---------- */
 
-  const pdfUpload = await storage.createFile(
-    appwriteConfig.bucketId,
-    ID.unique(),
-    pdfInputFile
-  );
-
-  const pdfUrl = constructFileUrl(pdfUpload.$id);
-
-  /* ---------- Upload Cover Image ---------- */
-
-  let coverUrl: string;
+  let coverInputFile;
 
   if (coverImage) {
 
     const coverBuffer = Buffer.from(await coverImage.arrayBuffer());
-
-    const coverInputFile = InputFile.fromBuffer(
-      coverBuffer,
-      coverImage.name
-    );
-
-    const coverUpload = await storage.createFile(
-      appwriteConfig.bucketId,
-      ID.unique(),
-      coverInputFile
-    );
-
-    coverUrl = constructFileUrl(coverUpload.$id);
+    coverInputFile = InputFile.fromBuffer(coverBuffer, coverImage.name);
 
   } else if (parsedCover) {
 
-    // Fetch auto-generated cover from PDF
     const response = await fetch(parsedCover);
-    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(await response.arrayBuffer());
 
-    const coverBuffer = Buffer.from(arrayBuffer);
-
-    const coverInputFile = InputFile.fromBuffer(
-      coverBuffer,
+    coverInputFile = InputFile.fromBuffer(
+      buffer,
       `${slug}_cover.png`
     );
 
-    const coverUpload = await storage.createFile(
-      appwriteConfig.bucketId,
-      ID.unique(),
-      coverInputFile
-    );
-
-    coverUrl = constructFileUrl(coverUpload.$id);
-
-  } else {
-
-    // fallback safety
-    coverUrl = "";
-
   }
 
-  /* ---------- Create Book Document ---------- */
+  /* ---------- Upload Files in Parallel ---------- */
+
+  const [pdfUpload, coverUpload] = await Promise.all([
+
+    storage.createFile(
+      appwriteConfig.bucketId,
+      ID.unique(),
+      pdfInputFile
+    ),
+
+    coverInputFile
+      ? storage.createFile(
+          appwriteConfig.bucketId,
+          ID.unique(),
+          coverInputFile
+        )
+      : null
+
+  ]);
+
+  const pdfUrl = constructFileUrl(pdfUpload.$id);
+
+  const coverUrl = coverUpload
+    ? constructFileUrl(coverUpload.$id)
+    : "";
+
+  /* ---------- Create Book ---------- */
 
   const book = await databases.createDocument(
     appwriteConfig.databaseId,
@@ -126,9 +119,9 @@ export const createBook = async ({
     }
   );
 
-  /* ---------- Save Segments ---------- */
+  /* ---------- Save Segments Efficiently ---------- */
 
-  const batchSize = 20;
+  const batchSize = 25;
 
   for (let i = 0; i < segments.length; i += batchSize) {
 
@@ -143,7 +136,10 @@ export const createBook = async ({
           {
             bookId: book.$id,
             userId,
-            ...segment
+            segmentIndex: segment.segmentIndex,
+            text: segment.text,
+            wordCount: segment.wordCount,
+            pageNumber: segment.pageNumber ?? null
           }
         )
       )

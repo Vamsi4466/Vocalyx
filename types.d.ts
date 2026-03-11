@@ -10,7 +10,7 @@ import { UploadSchema } from '@/lib/zod';
 // ============================================
 
 export interface IBook extends Document {
-    _id: string;
+    $id: string;
     clerkId: string;
     title: string;
     slug: string;

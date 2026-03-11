@@ -33,7 +33,7 @@ export default async function BookDetailsPage({
         <ArrowLeft className="size-6 text-[#212a3b]" />
       </Link>
 
-      {/* <VapiControls book={book} /> */}
+      <VapiControls book={book} />
     </div>
   );
 }

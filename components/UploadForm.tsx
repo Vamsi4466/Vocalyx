@@ -21,6 +21,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "./ui/f
 import { Input } from "./ui/input";
 
 import { checkBookExists, createBook } from "@/lib/actions/book.actions";
+import VoiceSelector from "./VoiceSelector";
 
 const UploadForm = () => {
 
@@ -165,6 +166,24 @@ const UploadForm = () => {
                                             className="form-input"
                                             placeholder="ex: Robert Kiyosaki"
                                             {...field}
+                                            disabled={isSubmitting}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+            />
+
+            <FormField
+                            control={form.control}
+                            name="persona"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="form-label">Choose Assistant Voice</FormLabel>
+                                    <FormControl>
+                                        <VoiceSelector
+                                            value={field.value}
+                                            onChange={field.onChange}
                                             disabled={isSubmitting}
                                         />
                                     </FormControl>
