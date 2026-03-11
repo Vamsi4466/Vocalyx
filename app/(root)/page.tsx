@@ -8,6 +8,8 @@ import { Search } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import React from 'react'
 
+export const dynamic = "force-dynamic";
+
 const page = async ({ searchParams }: { searchParams: Promise<{ query?: string }> }) => {
   
   const user = await getCurrentUser();
@@ -22,7 +24,7 @@ const page = async ({ searchParams }: { searchParams: Promise<{ query?: string }
 
   return (
     <main className='wrapper container'>
-    
+      
       <HeroSection />
 
       <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-10'>
