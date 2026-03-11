@@ -1,19 +1,28 @@
+'use client'; // ← add this
+
 import Navbar from "@/components/Navbar";
 import { getCurrentUser } from "@/lib/actions/user.actions";
-import { redirect } from "next/navigation";
-import React from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Toaster } from "sonner";
 
-export const dynamic = "force-dynamic";
+const Layout = ({ children }: { children: React.ReactNode }) => {
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const router = useRouter();
 
-const Layout = async ({ children }: { children: React.ReactNode }) => {
-  const currentUser = await getCurrentUser();
+  useEffect(() => {
+    const fetchUser = async () => {
+      const user = await getCurrentUser();
+      if (!user) {
+        router.push("/sign-in");
+      } else {
+        setCurrentUser(user);
+      }
+    };
+    fetchUser();
+  }, [router]);
 
-  if (!currentUser) {
-    console.log(currentUser);
-    return redirect("/sign-in");
-  
-  }
+  if (!currentUser) return null; // or a loading spinner
 
   return (
     <div>
