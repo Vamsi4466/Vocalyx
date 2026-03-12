@@ -59,7 +59,7 @@ export const createBook = async ({
   const pdfInputFile = InputFile.fromBuffer(pdfBuffer, pdfFile.name);
 
   /* ---------- Prepare Cover ---------- */
-  let coverInputFile;
+  let coverInputFile: any = null;
 
   if (coverImage) {
     const coverBuffer = Buffer.from(await coverImage.arrayBuffer());
@@ -70,22 +70,30 @@ export const createBook = async ({
     coverInputFile = InputFile.fromBuffer(buffer, `${slug}_cover.png`);
   }
 
-  /* ---------- Upload Files in Parallel ---------- */
+  /* ---------- Upload Files (Parallel = fastest safe option) ---------- */
   const [pdfUpload, coverUpload] = await Promise.all([
     storage.createFile(appwriteConfig.bucketId, ID.unique(), pdfInputFile),
     coverInputFile
       ? storage.createFile(appwriteConfig.bucketId, ID.unique(), coverInputFile)
-      : null,
+      : Promise.resolve(null),
   ]);
 
   const pdfUrl = constructFileUrl(pdfUpload.$id);
   const coverUrl = coverUpload ? constructFileUrl(coverUpload.$id) : "";
 
-  /* ---------- Compute extra info ---------- */
-  const totalWords = segments.reduce((acc: number, segment: any) => acc + (segment.wordCount || 0), 0);
-  const totalPages = segments.reduce((max: number, segment: any) => Math.max(max, segment.pageNumber ?? 0), 0);
-  const fileSize = pdfUpload.sizeOriginal; // numeric bytes
-  const readableSize = convertFileSize(fileSize); // optional string for UI
+  /* ---------- Compute Metadata ---------- */
+  let totalWords = 0;
+  let totalPages = 0;
+
+  for (const seg of segments) {
+    totalWords += seg.wordCount || 0;
+    if (seg.pageNumber && seg.pageNumber > totalPages) {
+      totalPages = seg.pageNumber;
+    }
+  }
+
+  const fileSize = pdfUpload.sizeOriginal;
+  const readableSize = convertFileSize(fileSize);
 
   /* ---------- Create Book ---------- */
   const book = await databases.createDocument(
@@ -101,18 +109,21 @@ export const createBook = async ({
       fileURL: pdfUrl,
       coverURL: coverUrl,
       totalWords,
-      pages:totalPages,
-      fileSize,     // numeric bytes ✅
-      readableSize, // optional string
+      pages: totalPages,
+      fileSize,
+      readableSize,
     }
   );
 
-  /* ---------- Save Segments Efficiently ---------- */
-  const batchSize = 25;
+  /* ---------- Insert Segments (Controlled Parallelism) ---------- */
+
+  const batchSize = 10; // safest for Appwrite
+
   for (let i = 0; i < segments.length; i += batchSize) {
     const batch = segments.slice(i, i + batchSize);
+
     await Promise.all(
-      batch.map((segment: any) =>
+      batch.map((segment: any, index: number) =>
         databases.createDocument(
           appwriteConfig.databaseId,
           appwriteConfig.segmentsCollectionId,
@@ -120,7 +131,7 @@ export const createBook = async ({
           {
             bookId: book.$id,
             userId,
-            segmentIndex: segment.segmentIndex,
+            segmentIndex: segment.segmentIndex ?? i + index,
             text: segment.text,
             wordCount: segment.wordCount,
             pageNumber: segment.pageNumber ?? null,

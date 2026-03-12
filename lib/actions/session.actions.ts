@@ -1,13 +1,9 @@
-'use server';
+"use server";
 
-import { ID } from 'node-appwrite';
-import { createAdminClient } from '@/lib/appwrite';
-import { EndSessionResult, StartSessionResult } from '@/types';
-import { appwriteConfig } from '../appwrite/config';
-
-const DATABASE_ID = process.env.APPWRITE_DATABASE!;
-const VOICE_SESSION_COLLECTION_ID =
-  process.env.APPWRITE_SESSION_COLLECTION!;
+import { EndSessionResult, StartSessionResult } from "@/types";
+import { createAdminClient } from "../appwrite";
+import { appwriteConfig } from "../appwrite/config";
+import { ID } from "node-appwrite";
 
 export const startVoiceSession = async (
   userId: string,
@@ -16,6 +12,8 @@ export const startVoiceSession = async (
   try {
     const { databases } = await createAdminClient();
 
+    const startedAt = new Date().toISOString();
+
     const session = await databases.createDocument(
       appwriteConfig.databaseId,
       appwriteConfig.sessionsCollectionId,
@@ -23,7 +21,8 @@ export const startVoiceSession = async (
       {
         userId,
         bookId,
-        startedAt: new Date().toISOString(),
+        startedAt,
+        endedAt: null,
         durationSeconds: 0,
       }
     );
@@ -43,18 +42,32 @@ export const startVoiceSession = async (
 };
 
 export const endVoiceSession = async (
-  sessionId: string,
-  durationSeconds: number
+  sessionId: string
 ): Promise<EndSessionResult> => {
   try {
     const { databases } = await createAdminClient();
 
+    // Get existing session
+    const session = await databases.getDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.sessionsCollectionId,
+      sessionId
+    );
+
+    const startedAt = new Date(session.startedAt);
+    const endedAt = new Date();
+
+    // Calculate duration in seconds
+    const durationSeconds = Math.floor(
+      (endedAt.getTime() - startedAt.getTime()) / 1000
+    );
+
     await databases.updateDocument(
-      DATABASE_ID,
-      VOICE_SESSION_COLLECTION_ID,
+      appwriteConfig.databaseId,
+      appwriteConfig.sessionsCollectionId,
       sessionId,
       {
-        endedAt: new Date().toISOString(),
+        endedAt: endedAt.toISOString(),
         durationSeconds,
       }
     );
