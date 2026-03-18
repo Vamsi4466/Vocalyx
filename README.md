@@ -182,6 +182,4 @@ Author
 Vamsikrishna Setty
 Frontend / Full Stack Developer
 
-GitHub: https://github.com/yourusername
-
 LinkedIn: https://www.linkedin.com/in/vamsikrishna-setty-b266a238a/
