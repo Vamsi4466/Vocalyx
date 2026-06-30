@@ -36,7 +36,7 @@ export const checkBookExists = async (userId: string, title: string) => {
 // import { createAdminClient } from "@/lib/appwrite-server";
 // import { appwriteConfig } from "@/lib/appwrite-config";
 
-import { PDFDocument } from "pdf-lib"; // Make sure pdf-lib is installed
+import { PDFDocument } from "pdf-lib";
 import slugify from "slugify";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "./user.actions";
@@ -281,5 +281,89 @@ export const getBooks = async ({ title }: GetBooksProps) => {
   } catch (error) {
     console.error("Failed to fetch books:", error);
     return [];
+  }
+};
+
+// 'use server';
+
+// import { createAdminClient } from "../appwrite";
+// import { appwriteConfig } from "../appwrite/config";
+// import { serializeData } from "../utils";
+// import { Query } from "node-appwrite";
+
+/* ---------------- Search Book Segments ---------------- */
+
+export const searchBookSegments = async (
+  bookId: string,
+  query: string,
+  limit: number = 5
+) => {
+  try {
+    const { databases } = await createAdminClient();
+
+    console.log(`Searching: "${query}" in book ${bookId}`);
+
+    let segments: any[] = [];
+
+    // Primary: Appwrite full-text search on text field
+    try {
+      const response = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.segmentsCollectionId,
+        [
+          Query.equal("bookId", bookId),
+          Query.search("text", query),
+          Query.limit(limit),
+          Query.orderAsc("segmentIndex"),
+        ]
+      );
+      segments = response.documents;
+    } catch {
+      segments = [];
+    }
+
+    // Fallback: keyword-by-keyword search if primary returns nothing
+    if (segments.length === 0) {
+      const keywords = query
+        .split(/\s+/)
+        .filter((k) => k.length > 2);
+
+      for (const keyword of keywords) {
+        try {
+          const response = await databases.listDocuments(
+            appwriteConfig.databaseId,
+            appwriteConfig.segmentsCollectionId,
+            [
+              Query.equal("bookId", bookId),
+              Query.search("text", keyword),
+              Query.limit(limit),
+              Query.orderAsc("segmentIndex"),
+            ]
+          );
+
+          if (response.documents.length > 0) {
+            segments = response.documents;
+            break; // Stop at first keyword that returns results
+          }
+        } catch {
+          continue;
+        }
+      }
+    }
+
+    console.log(`Search complete. Found ${segments.length} results`);
+
+    return {
+      success: true,
+      data: serializeData(segments),
+    };
+
+  } catch (error) {
+    console.error("Error searching segments:", error);
+    return {
+      success: false,
+      error: (error as Error).message,
+      data: [],
+    };
   }
 };

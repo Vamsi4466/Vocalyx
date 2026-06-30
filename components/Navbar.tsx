@@ -59,7 +59,7 @@ const Navbar = () => {
 
                     <div className='flex gap-7.5 items-center'>
                         <button
-                            onClick={() => signOutUser()}
+                            onClick={async () => await signOutUser()}
                             className='cursor-pointer hover:opacity-70 transition'
                         >
                             Log Out
