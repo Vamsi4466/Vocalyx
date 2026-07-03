@@ -143,17 +143,25 @@ const AuthForm = ({ type }: { type: FormType }) => {
             </p>
           )}
 
-          <div className="text-sm font-normal flex justify-center gap-1">
-            <p className="text-[#4b2e1f]">
-              {type === "sign-in"
-                ? "Don't have an account?"
-                : "Already have an account?"}
-            </p>
+          <div className="text-sm font-normal flex flex-col items-center gap-2">
+            <div className="flex items-center gap-1">
+              <p className="text-[#4b2e1f]">
+                {type === "sign-in"
+                  ? "Don't have an account?"
+                  : "Already have an account?"}
+              </p>
+              <Link
+                href={type === "sign-in" ? "/sign-up" : "/sign-in"}
+                className="font-medium text-[#4b2e1f] underline"
+              >
+                {type === "sign-in" ? "Sign Up" : "Sign In"}
+              </Link>
+            </div>
             <Link
-              href={type === "sign-in" ? "/sign-up" : "/sign-in"}
-              className="font-medium text-[#4b2e1f] underline"
+              href="/api/demo-login?redirect=/"
+              className="btn-secondary w-full justify-center"
             >
-              {type === "sign-in" ? "Sign Up" : "Sign In"}
+              Try the demo — no sign-up required
             </Link>
           </div>
         </form>

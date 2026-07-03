@@ -1,13 +1,12 @@
 'use client';
 
-import { getCurrentUser, signOutUser } from '@/lib/actions/user.actions';
+import { getCurrentUser, signOutUser, isDemoUser } from '@/lib/actions/user.actions';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Image from "next/image";
 import React, { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils';
 
-// Removed "Pricing" item
 const navItems = [
     { label: "Library", href: "/" },
     { label: "Add new", href: "/books/new" },
@@ -16,19 +15,20 @@ const navItems = [
 const Navbar = () => {
     const pathName = usePathname();
     const [currentUser, setCurrentUser] = useState<any>(null);
-    const router = useRouter();
+    const [isDemo, setIsDemo] = useState(false);
 
     useEffect(() => {
         const fetchUser = async () => {
             const user = await getCurrentUser();
-            if (!user) {
-                router.push("/sign-in");
-            } else {
-                setCurrentUser(user);
+            setCurrentUser(user); // no redirect — a session (real or demo) always exists on any real page
+
+            if (user) {
+                const demoStatus = await isDemoUser(user);
+                setIsDemo(demoStatus);
             }
         };
         fetchUser();
-    }, [router]);
+    }, []);
 
     if (!currentUser) return null;
 
@@ -36,7 +36,7 @@ const Navbar = () => {
         <header className='w-full fixed z-50 bg-[var(--bg-primary)]'>
             <div className='wrapper navbar-height py-4 flex justify-between items-center'>
                 <Link href="/" className='flex gap-0.5 items-center'>
-                    <Image src="/assets/logo.png" alt="Bookfied" width={42} height={26} />
+                    <Image src="/assets/logo.png" alt="Vocalyx" width={42} height={26} />
                     <span className="logo-text">Vocalyx</span>
                 </Link>
 
@@ -48,7 +48,7 @@ const Navbar = () => {
                                 href={href}
                                 key={label}
                                 className={cn(
-                                    'nav-link-base cursor-pointer', // ← added cursor-pointer
+                                    'nav-link-base cursor-pointer',
                                     isActive ? 'nav-link-active' : 'text-black hover:opacity-70'
                                 )}
                             >
@@ -58,12 +58,18 @@ const Navbar = () => {
                     })}
 
                     <div className='flex gap-7.5 items-center'>
-                        <button
-                            onClick={async () => await signOutUser()}
-                            className='cursor-pointer hover:opacity-70 transition'
-                        >
-                            Log Out
-                        </button>
+                        {isDemo ? (
+                            <Link href="/sign-in" className="nav-btn">
+                                Sign Up
+                            </Link>
+                        ) : (
+                            <button
+                                onClick={async () => await signOutUser()}
+                                className='cursor-pointer hover:opacity-70 transition'
+                            >
+                                Log Out
+                            </button>
+                        )}
                     </div>
                 </nav>
             </div>
