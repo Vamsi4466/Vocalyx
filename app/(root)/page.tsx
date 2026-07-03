@@ -15,9 +15,9 @@ const page = async ({ searchParams }: { searchParams: Promise<{ query?: string }
   
   const user = await getCurrentUser();
 
-  if (!user) {
-    redirect("/sign-in");
-  }
+  // if (!user) {
+  //   redirect("/sign-in");
+  // }
 
   const books = await getUserBooks(user.$id);
 

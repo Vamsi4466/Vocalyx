@@ -1,4 +1,4 @@
-'use client'; // ← add this
+'use client';
 
 import Navbar from "@/components/Navbar";
 import { Toaster } from "sonner";
