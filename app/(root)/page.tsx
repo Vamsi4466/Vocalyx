@@ -25,7 +25,7 @@ const page = async ({ searchParams }: { searchParams: Promise<{ query?: string }
     <div>
       <Navbar />
       <main className='wrapper container'>
-        {await demo && <DemoBanner />}
+        {demo && <DemoBanner />}
 
         <HeroSection />
 

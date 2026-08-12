@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/appwrite";
 import { getDemoAccountId } from "@/lib/actions/user.actions";
 import { DEMO_SESSION_COOKIE } from "@/lib/constants";
+import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
 
     const response = NextResponse.redirect(new URL(redirectTo, request.url));
 
-    response.cookies.set(DEMO_SESSION_COOKIE, session.secret, {
+    (await cookies()).set(DEMO_SESSION_COOKIE, session.secret, {
       path: "/",
       httpOnly: true,
       sameSite: "strict",
