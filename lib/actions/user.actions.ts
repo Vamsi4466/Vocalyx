@@ -192,34 +192,34 @@ export const signInUser = async ({ email }: { email: string }) => {
   }
 };
 
-export const getAllUsers = async (
-  limit: number,
-  offset: number,
-  searchText?: string
-) => {
-  try {
-    const { databases } = await createAdminClient();
+// export const getAllUsers = async (
+//   limit: number,
+//   offset: number,
+//   searchText?: string
+// ) => {
+//   try {
+//     const { databases } = await createAdminClient();
 
-    const queries = [Query.limit(limit), Query.offset(offset)];
+//     const queries = [Query.limit(limit), Query.offset(offset)];
 
-    if (searchText && searchText.trim() !== "") {
-      queries.push(
-        Query.or([
-          Query.contains("fullName", searchText),
-          Query.contains("email", searchText),
-        ])
-      );
-    }
+//     if (searchText && searchText.trim() !== "") {
+//       queries.push(
+//         Query.or([
+//           Query.contains("fullName", searchText),
+//           Query.contains("email", searchText),
+//         ])
+//       );
+//     }
 
-    const { documents: users, total } = await databases.listDocuments(
-      dbId,
-      usersCollId,
-      queries
-    );
+//     const { documents: users, total } = await databases.listDocuments(
+//       dbId,
+//       usersCollId,
+//       queries
+//     );
 
-    return { users, total };
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    return { users: [], total: 0 };
-  }
-};
+//     return { users, total };
+//   } catch (error) {
+//     console.error("Error fetching users:", error);
+//     return { users: [], total: 0 };
+//   }
+// };
