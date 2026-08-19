@@ -11,14 +11,14 @@ import { redirect } from 'next/navigation';
 export const dynamic = "force-dynamic";
 
 const page = async ({ searchParams }: { searchParams: Promise<{ query?: string }> }) => {
-  const user = await getCurrentUser();
+  const currentUser = await getCurrentUser();
 
-  if (!user) {
-    redirect("/api/demo-login?redirect=/");
+  if (!currentUser) {
+    return redirect("/sign-in");
   }
 
-  const demo = await isDemoUser(user);
-  const books = await getUserBooks(user.$id);
+  const demo = await isDemoUser(currentUser);
+  const books = await getUserBooks(currentUser.$id);
   const { query } = await searchParams;
 
   return (
