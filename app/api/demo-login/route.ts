@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/appwrite";
 import { getDemoAccountId } from "@/lib/actions/user.actions";
 import { DEMO_SESSION_COOKIE } from "@/lib/constants";
-import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -12,15 +11,18 @@ export async function GET(request: Request) {
     const { users } = await createAdminClient();
     const demoAccountId = await getDemoAccountId();
 
-    const session = await users.createSession(demoAccountId);
+    const session = await users.createSession({
+      userId: demoAccountId,
+    });
 
     const response = NextResponse.redirect(new URL(redirectTo, request.url));
 
-    (await cookies()).set(DEMO_SESSION_COOKIE, session.secret, {
+    response.cookies.set(DEMO_SESSION_COOKIE, session.secret, {
       path: "/",
       httpOnly: true,
-      sameSite: "strict",
-      secure: false,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      expires: new Date(session.expire),
     });
 
     return response;
