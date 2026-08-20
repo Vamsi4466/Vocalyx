@@ -159,9 +159,9 @@ const AuthForm = ({ type }: { type: FormType }) => {
             </div>
             <Link
               href="/api/demo-login?redirect=/"
-              className="btn-secondary w-full justify-center"
+              className="bg-[#4b2e1f] hover:bg-[#5c3b2a] transition-all rounded-full text-white text-xs font-medium h-9 px-5 flex items-center justify-center w-fit mx-auto"
             >
-              Try the demo — no sign-up required
+              Try the Demo, No Sign-Up Required
             </Link>
           </div>
         </form>
