@@ -5,7 +5,7 @@ import { InputFile } from "node-appwrite/file";
 
 import { createAdminClient, createSessionClient } from "../appwrite";
 import { appwriteConfig } from "../appwrite/config";
-import { constructFileUrl, convertFileSize, parseStringify } from "../utils";
+import { constructFileUrl, convertFileSize, serializeData } from "../utils";
 import { ID, Models, Query } from "node-appwrite";
 
 /* ---------------- Check if Book Exists ---------------- */
@@ -220,7 +220,7 @@ export const getBookBySlug = async (slug: string, userId: string) => {
     }
 
     // Appwrite documents have plain JSON structure, but serialize just in case
-    const book = (response.documents[0]);
+    const book = serializeData(response.documents[0]);
 
     return { success: true, data: book };
   } catch (e) {
@@ -355,7 +355,7 @@ export const searchBookSegments = async (
 
     return {
       success: true,
-      data: parseStringify(segments),
+      data: serializeData(segments),
     };
 
   } catch (error) {

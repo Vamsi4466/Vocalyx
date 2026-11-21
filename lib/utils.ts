@@ -11,7 +11,7 @@ export const parseStringify = (value: unknown) =>
   JSON.parse(JSON.stringify(value));
 
 // // Serialize Mongoose documents to plain JSON objects (strips ObjectId, Date, etc.)
-// export const serializeData = <T>(data: T): T => JSON.parse(JSON.stringify(data));
+export const serializeData = <T>(data: T): T => JSON.parse(JSON.stringify(data));
 
 // Auto generate slug
 export function generateSlug(text: string): string {
@@ -39,9 +39,6 @@ export const splitIntoSegments = (
   if (segmentSize <= 0) {
     throw new Error('segmentSize must be greater than 0');
   }
-  // if (overlapSize < 0 || overlapSize >= segmentSize) {
-  //   throw new Error('overlapSize must be >= 0 and < segmentSize');
-  // }
 
   const words = text.split(/\s+/).filter((word) => word.length > 0);
   const segments: TextSegment[] = [];
