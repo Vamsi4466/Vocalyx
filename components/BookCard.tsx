@@ -26,7 +26,7 @@ const BookCard = ({ book }: BookCardProps) => {
         {/* Action Dropdown (top-right corner) */}
         <div
           className="absolute top-2 right-2 z-10"
-          onClick={(e) => e.stopPropagation()} // ⚡ Prevent navigation when clicking dropdown
+          onClick={(e) => e.stopPropagation()}
         >
           <ActionDropdown book={book} />
         </div>

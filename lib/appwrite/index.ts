@@ -36,6 +36,7 @@ export const createAdminClient = async () => {
     .setEndpoint(appwriteConfig.endpointUrl!)
     .setProject(appwriteConfig.projectId!)
     .setKey(appwriteConfig.secretKey!);
+    
 
   return {
     get account() {

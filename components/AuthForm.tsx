@@ -17,8 +17,9 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { createAccount, signInUser } from "@/lib/actions/user.actions";
+import { createAccount, signInAsDemoUser, signInUser } from "@/lib/actions/user.actions";
 import OtpModal from "@/components/OTPModal";
+import { useRouter } from "next/navigation";
 
 type FormType = "sign-in" | "sign-up";
 
@@ -35,6 +36,9 @@ const AuthForm = ({ type }: { type: FormType }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [accountId, setAccountId] = useState<string | null>(null);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
+
+  const router = useRouter();
 
   const formSchema = authFormSchema(type);
   const form = useForm<z.infer<typeof formSchema>>({
@@ -60,6 +64,20 @@ const AuthForm = ({ type }: { type: FormType }) => {
       setErrorMessage("Failed to create account. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setIsDemoLoading(true);
+    setErrorMessage("");
+
+    const result = await signInAsDemoUser();
+
+    if (result) {
+      router.push("/");
+    } else {
+      setErrorMessage("Demo login failed. Please try again.");
+      setIsDemoLoading(false);
     }
   };
 
@@ -122,7 +140,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
 
           <Button
             type="submit"
-            className="bg-[#4b2e1f] hover:bg-[#5c3b2a] transition-all rounded-full text-white text-sm font-medium h-[66px] flex items-center justify-center"
+            className="bg-[#4b2e1f] hover:bg-[#5c3b2a] transition-all rounded-full text-white text-sm font-medium h-[66px] flex items-center justify-center cursor-pointer"
             disabled={isLoading}
           >
             {type === "sign-in" ? "Sign In" : "Sign Up"}
@@ -157,15 +175,27 @@ const AuthForm = ({ type }: { type: FormType }) => {
                 {type === "sign-in" ? "Sign Up" : "Sign In"}
               </Link>
             </div>
-            <Link
-              href="/api/demo-login?redirect=/"
-              className="bg-[#4b2e1f] hover:bg-[#5c3b2a] transition-all rounded-full text-white text-xs font-medium h-9 px-5 flex items-center justify-center w-fit mx-auto"
-            >
-              Try the Demo, No Sign-Up Required
-            </Link>
           </div>
         </form>
       </Form>
+
+      <Button
+        type="button"
+        onClick={handleDemoLogin}
+        disabled={isDemoLoading || isLoading}
+        className="bg-[#4b2e1f] hover:bg-[#5c3b2a] transition-all rounded-full text-white text-xs font-medium h-9 px-5 w-fit mx-auto cursor-pointer"
+      >
+        Try the Demo, No Sign-Up Required
+        {isDemoLoading && (
+          <Image
+            src="/assets/icons/loader.svg"
+            alt="loader"
+            width={16}
+            height={16}
+            className="ml-2 animate-spin"
+          />
+        )}
+      </Button>
 
       {accountId && (
         <OtpModal email={form.getValues("email")} accountId={accountId} />

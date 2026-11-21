@@ -19,7 +19,8 @@ const page = async ({ searchParams }: { searchParams: Promise<{ query?: string }
 
   const demo = await isDemoUser(currentUser);
   const books = await getUserBooks(currentUser.$id);
-  const { query } = await searchParams;
+  
+  // const { query } = await searchParams;
 
   return (
     <div>

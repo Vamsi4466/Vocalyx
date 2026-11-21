@@ -9,7 +9,7 @@ import { Upload, ImageIcon } from "lucide-react";
 
 import { UploadSchema } from "@/lib/zod";
 import { getCurrentUser } from "@/lib/actions/user.actions";
-import { parsePDFFile } from "@/lib/utils";
+import { generateSlug, parsePDFFile } from "@/lib/utils";
 import { ACCEPTED_PDF_TYPES, ACCEPTED_IMAGE_TYPES } from "@/lib/constants";
 
 import LoadingOverlay from "./LoadingOverlay";
@@ -26,7 +26,7 @@ import VoiceSelector from "./VoiceSelector";
 const UploadForm = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  // const [isMounted, setIsMounted] = useState(false);
   const [user, setUser] = useState<any>(null);
 
   const router = useRouter();
@@ -38,7 +38,7 @@ const UploadForm = () => {
     };
 
     fetchUser();
-    setIsMounted(true);
+    // setIsMounted(true);
   }, []);
 
   const form = useForm<any>({
@@ -59,7 +59,7 @@ const UploadForm = () => {
 
     try {
 
-            const fileTitle = data.title.replace(/\s+/g, '-').toLowerCase();
+            const fileTitle = generateSlug(data.title);
 
             const existsCheck = await checkBookExists(user.$id, fileTitle);
 
@@ -105,7 +105,7 @@ const UploadForm = () => {
     }
   };
 
-  if (!isMounted) return null;
+  // if (!isMounted) return null;
 
   return (
     <>

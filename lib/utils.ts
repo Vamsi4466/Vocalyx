@@ -1,4 +1,3 @@
-
 import { TextSegment } from '@/types';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -11,8 +10,8 @@ export function cn(...inputs: ClassValue[]) {
 export const parseStringify = (value: unknown) =>
   JSON.parse(JSON.stringify(value));
 
-// Serialize Mongoose documents to plain JSON objects (strips ObjectId, Date, etc.)
-export const serializeData = <T>(data: T): T => JSON.parse(JSON.stringify(data));
+// // Serialize Mongoose documents to plain JSON objects (strips ObjectId, Date, etc.)
+// export const serializeData = <T>(data: T): T => JSON.parse(JSON.stringify(data));
 
 // Auto generate slug
 export function generateSlug(text: string): string {
@@ -26,23 +25,23 @@ export function generateSlug(text: string): string {
 }
 
 // Escape regex special characters to prevent ReDoS attacks
-export const escapeRegex = (str: string): string => {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-};
+// export const escapeRegex = (str: string): string => {
+//   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// };
 
 // Splits text content into segments for MongoDB storage and search
 export const splitIntoSegments = (
     text: string,
     segmentSize: number = 500, // Maximum words per segment
-    overlapSize: number = 50, // Words to overlap between segments for context
+    // overlapSize: number = 50, // Words to overlap between segments for context
 ): TextSegment[] => {
   // Validate parameters to prevent infinite loops
   if (segmentSize <= 0) {
     throw new Error('segmentSize must be greater than 0');
   }
-  if (overlapSize < 0 || overlapSize >= segmentSize) {
-    throw new Error('overlapSize must be >= 0 and < segmentSize');
-  }
+  // if (overlapSize < 0 || overlapSize >= segmentSize) {
+  //   throw new Error('overlapSize must be >= 0 and < segmentSize');
+  // }
 
   const words = text.split(/\s+/).filter((word) => word.length > 0);
   const segments: TextSegment[] = [];
@@ -63,8 +62,8 @@ export const splitIntoSegments = (
 
     segmentIndex++;
 
-    if (endIndex >= words.length) break;
-    startIndex = endIndex - overlapSize;
+    // if (endIndex >= words.length) break;
+    // startIndex = endIndex - overlapSize;
   }
 
   return segments;

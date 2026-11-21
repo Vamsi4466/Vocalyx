@@ -53,8 +53,7 @@ const FileUploader = <T extends FieldValues>({
 
   /* ---------- File select ---------- */
 
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
       const file = e.target.files?.[0];
       if (!file) return;
@@ -63,9 +62,7 @@ const FileUploader = <T extends FieldValues>({
 
       onChange(file);
 
-    },
-    [onChange, acceptTypes]
-  );
+  }
 
   /* ---------- Drag events ---------- */
 
@@ -96,8 +93,7 @@ const FileUploader = <T extends FieldValues>({
 
   /* ---------- Remove file ---------- */
 
-  const onRemove = useCallback(
-    (e: React.MouseEvent) => {
+  const onRemove = (e: React.MouseEvent) => {
 
       e.stopPropagation();
 
@@ -107,9 +103,7 @@ const FileUploader = <T extends FieldValues>({
         inputRef.current.value = "";
       }
 
-    },
-    [onChange]
-  );
+  }
 
   const isUploaded = !!value;
 

@@ -42,7 +42,8 @@ export const startVoiceSession = async (
 };
 
 export const endVoiceSession = async (
-  sessionId: string
+  sessionId: string,
+  durationSeconds: number,
 ): Promise<EndSessionResult> => {
   try {
     const { databases } = await createAdminClient();

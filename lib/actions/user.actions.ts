@@ -8,13 +8,14 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { parseStringify } from "../utils";
 
-if (!appwriteConfig.databaseId || !appwriteConfig.usersCollectionId) {
-  throw new Error("Missing Appwrite configuration values");
-}
+// if (!appwriteConfig.databaseId || !appwriteConfig.usersCollectionId) {
+//   throw new Error("Missing Appwrite configuration values");
+// }
 
 const dbId = appwriteConfig.databaseId;
 const usersCollId = appwriteConfig.usersCollectionId;
 const DEMO_EMAIL = "vocalyxdemo@gmail.com";
+
 
 const getUserByEmail = async (email: string) => {
   const { databases } = await createAdminClient();
@@ -128,11 +129,14 @@ export const signInAsDemoUser = async () => {
     const session = await users.createSession(demoAccountId);
 
     (await cookies()).set(DEMO_SESSION_COOKIE, session.secret, {
+
       path: "/",
       httpOnly: true,
       sameSite: "strict",
       secure: false,
     });
+
+    return true;
   } catch (error) {
     console.log(error, "Failed to sign in as demo user");
   }
